@@ -1,8 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Stethoscope, Users, Calendar, Search, Shield, Clock } from 'lucide-react';
+import { Stethoscope, Users, Calendar, Search, Shield, Clock, Heart, Award } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
 
 export const HomePage: React.FC = () => {
+  const { user } = useAuth();
+
   const features = [
     {
       icon: <Stethoscope className="h-8 w-8 text-sky-500" />,
@@ -43,26 +46,51 @@ export const HomePage: React.FC = () => {
               and book appointments seamlessly. MedAssist makes healthcare accessible and convenient.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link
-                to="/symptom-checker"
-                className="bg-sky-500 hover:bg-sky-600 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg"
-              >
-                Check Symptoms
-              </Link>
-              <Link
-                to="/doctors"
-                className="bg-white hover:bg-gray-50 text-sky-600 border-2 border-sky-500 px-8 py-4 rounded-lg text-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg"
-              >
-                Find a Doctor
-              </Link>
-              <Link
-                to="/appointments"
-                className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg"
-              >
-                Book Appointment
-              </Link>
-            </div>
+            {user ? (
+              // Authenticated user - show main action buttons
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <Link
+                  to="/symptom-checker"
+                  className="bg-sky-500 hover:bg-sky-600 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg"
+                >
+                  Check Symptoms
+                </Link>
+                <Link
+                  to="/doctors"
+                  className="bg-white hover:bg-gray-50 text-sky-600 border-2 border-sky-500 px-8 py-4 rounded-lg text-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg"
+                >
+                  Find a Doctor
+                </Link>
+                <Link
+                  to="/appointments"
+                  className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg"
+                >
+                  Book Appointment
+                </Link>
+              </div>
+            ) : (
+              // Non-authenticated user - show sign up prompt
+              <div className="text-center">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 max-w-2xl mx-auto mb-6">
+                  <h3 className="text-xl font-bold text-yellow-800 mb-3">
+                    🔒 Sign In Required
+                  </h3>
+                  <p className="text-yellow-700 mb-4">
+                    To access our comprehensive healthcare services, AI-powered diagnostics, 
+                    and connect with medical professionals, please sign in to your account.
+                  </p>
+                  <p className="text-sm text-yellow-600">
+                    New to MedAssist? Create your account to get started with personalized healthcare.
+                  </p>
+                </div>
+                <Link
+                  to="/about"
+                  className="bg-sky-500 hover:bg-sky-600 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg inline-block"
+                >
+                  Learn More About MedAssist
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -123,6 +151,18 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
+      {/* Achievement Section */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl p-8 text-white">
+            <Award className="h-16 w-16 mx-auto mb-4" />
+            <h2 className="text-3xl font-bold mb-4">Award-Winning Healthcare Innovation</h2>
+            <p className="text-xl text-purple-100 mb-2">🏆 3rd Place Winner</p>
+            <p className="text-lg text-purple-100">Avinya2k24 Hackathon for Innovative Healthcare Solutions</p>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-20 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -132,12 +172,29 @@ export const HomePage: React.FC = () => {
           <p className="text-xl text-gray-600 mb-8">
             Join thousands of patients who trust MedAssist for their healthcare needs
           </p>
-          <Link
-            to="/doctors"
-            className="bg-sky-500 hover:bg-sky-600 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg inline-block"
-          >
-            Get Started Today
-          </Link>
+          
+          {user ? (
+            <Link
+              to="/doctors"
+              className="bg-sky-500 hover:bg-sky-600 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg inline-block"
+            >
+              Explore Our Services
+            </Link>
+          ) : (
+            <div className="bg-white rounded-xl shadow-lg p-8 max-w-2xl mx-auto">
+              <Heart className="h-12 w-12 text-sky-500 mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-gray-900 mb-4">
+                Join the MedAssist Community
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Sign up today to access our comprehensive healthcare platform with AI-powered diagnostics, 
+                expert doctors, and 24/7 support.
+              </p>
+              <p className="text-sm text-gray-500">
+                Please use the Sign In or Sign Up buttons in the navigation to get started.
+              </p>
+            </div>
+          )}
         </div>
       </section>
     </div>

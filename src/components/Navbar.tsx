@@ -11,11 +11,17 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({ onAuthClick }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
-  const { user, signOut, isPatient, isDoctor } = useAuth();
+  const { user, signOut, isPatient, isDoctor, loading } = useAuth();
 
   const isActive = (path: string) => location.pathname === path;
 
-  const navLinks = [
+  // Define navigation links based on authentication status
+  const publicNavLinks = [
+    { path: '/', label: 'Home' },
+    { path: '/about', label: 'About' },
+  ];
+
+  const authenticatedNavLinks = [
     { path: '/', label: 'Home' },
     { path: '/doctors', label: 'Find Doctors' },
     { path: '/symptom-checker', label: 'Symptom Checker' },
@@ -23,11 +29,15 @@ export const Navbar: React.FC<NavbarProps> = ({ onAuthClick }) => {
     { path: '/video-consultation', label: 'Video Consultation' },
     { path: '/appointments', label: 'Book Appointment' },
     { path: '/contact', label: 'Contact' },
+    { path: '/about', label: 'About' },
   ];
+
+  const navLinks = user ? authenticatedNavLinks : publicNavLinks;
 
   const handleSignOut = async () => {
     try {
       await signOut();
+      setIsMenuOpen(false);
     } catch (error) {
       console.error('Sign out error:', error);
     }
@@ -86,7 +96,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onAuthClick }) => {
                   </div>
                   <button
                     onClick={handleSignOut}
-                    className="text-gray-500 hover:text-gray-700 transition-colors"
+                    disabled={loading}
+                    className="text-gray-500 hover:text-gray-700 transition-colors disabled:opacity-50"
                     title="Sign Out"
                   >
                     <LogOut className="h-4 w-4" />
@@ -164,7 +175,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onAuthClick }) => {
                     </div>
                     <button
                       onClick={handleSignOut}
-                      className="w-full text-left px-3 py-2 text-gray-700 hover:text-red-600 font-medium transition-colors flex items-center"
+                      disabled={loading}
+                      className="w-full text-left px-3 py-2 text-gray-700 hover:text-red-600 font-medium transition-colors flex items-center disabled:opacity-50"
                     >
                       <LogOut className="h-4 w-4 mr-2" />
                       Sign Out

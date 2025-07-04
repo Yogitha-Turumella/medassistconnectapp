@@ -108,6 +108,8 @@ export const useAuth = () => {
     setLoading(true);
     try {
       await authService.signOut();
+      setUser(null);
+      setProfile(null);
     } catch (error) {
       throw error;
     } finally {

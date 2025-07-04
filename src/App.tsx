@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
+import { ProtectedRoute } from './components/ProtectedRoute';
 import { MultilingualChatBot } from './components/MultilingualChatBot';
 import { AuthModal } from './components/AuthModal';
 import { HomePage } from './pages/HomePage';
+import { AboutPage } from './pages/AboutPage';
 import { DoctorsPage } from './pages/DoctorsPage';
 import { SymptomCheckerPage } from './pages/SymptomCheckerPage';
 import { EnhancedSymptomCheckerPage } from './pages/EnhancedSymptomCheckerPage';
@@ -40,17 +42,47 @@ function App() {
         <Navbar user={user} onAuthClick={openAuthModal} />
         <main>
           <Routes>
+            {/* Public routes - accessible without authentication */}
             <Route path="/" element={<HomePage />} />
-            <Route path="/doctors" element={<DoctorsPage />} />
-            <Route path="/symptom-checker" element={<SymptomCheckerPage />} />
-            <Route path="/enhanced-symptom-checker" element={<EnhancedSymptomCheckerPage />} />
-            <Route path="/appointments" element={<AppointmentPage />} />
-            <Route path="/contact" element={<ContactPage />} />
-            <Route path="/video-consultation" element={<VideoConsultationPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            
+            {/* Protected routes - require authentication */}
+            <Route path="/doctors" element={
+              <ProtectedRoute>
+                <DoctorsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/symptom-checker" element={
+              <ProtectedRoute>
+                <SymptomCheckerPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/enhanced-symptom-checker" element={
+              <ProtectedRoute>
+                <EnhancedSymptomCheckerPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/appointments" element={
+              <ProtectedRoute>
+                <AppointmentPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/contact" element={
+              <ProtectedRoute>
+                <ContactPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/video-consultation" element={
+              <ProtectedRoute>
+                <VideoConsultationPage />
+              </ProtectedRoute>
+            } />
           </Routes>
         </main>
         <Footer />
-        <MultilingualChatBot sessionType="general_support" />
+        
+        {/* Only show chatbot for authenticated users */}
+        {user && <MultilingualChatBot sessionType="general_support" />}
         
         <AuthModal
           isOpen={showAuthModal}
