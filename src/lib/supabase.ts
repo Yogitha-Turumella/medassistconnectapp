@@ -1,12 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
+import { config, isServiceConfigured } from './config';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-// Create a fallback client if environment variables are not set
+// Create Supabase client with configuration
 export const supabase = createClient(
-  supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'placeholder-key'
+  config.supabase.url,
+  config.supabase.anonKey
 );
 
 // Database types
@@ -134,7 +132,7 @@ export const authService = {
       if (error) throw error;
 
       // Create profile based on user type (only if Supabase is properly configured)
-      if (data.user && supabaseUrl && supabaseAnonKey) {
+      if (data.user && isServiceConfigured('supabase')) {
         try {
           if (userData.userType === 'patient') {
             await this.createPatientProfile(data.user.id, userData.name);
@@ -193,7 +191,7 @@ export const authService = {
 
   // Create patient profile
   async createPatientProfile(userId: string, name: string) {
-    if (!supabaseUrl || !supabaseAnonKey) {
+    if (!isServiceConfigured('supabase')) {
       throw new Error('Supabase not configured');
     }
 
@@ -217,7 +215,7 @@ export const authService = {
 
   // Create doctor profile
   async createDoctorProfile(userId: string, name: string) {
-    if (!supabaseUrl || !supabaseAnonKey) {
+    if (!isServiceConfigured('supabase')) {
       throw new Error('Supabase not configured');
     }
 
@@ -248,7 +246,7 @@ export const authService = {
 export const dataService = {
   // Upload image to Supabase Storage
   async uploadImage(file: File, bucket: string = 'medical-images'): Promise<string> {
-    if (!supabaseUrl || !supabaseAnonKey) {
+    if (!isServiceConfigured('supabase')) {
       // Return a mock URL for demo purposes
       return `https://example.com/mock-upload/${file.name}`;
     }
@@ -277,7 +275,7 @@ export const dataService = {
 
   // Save medical image analysis
   async saveMedicalImage(patientId: string, imageUrl: string, imageType: string, aiAnalysis: any) {
-    if (!supabaseUrl || !supabaseAnonKey) {
+    if (!isServiceConfigured('supabase')) {
       console.log('Mock: Medical image saved', { patientId, imageUrl, imageType, aiAnalysis });
       return { id: 'mock-id', patient_id: patientId, image_url: imageUrl };
     }
@@ -305,7 +303,7 @@ export const dataService = {
 
   // Save symptom analysis
   async saveSymptomAnalysis(analysisData: Partial<SymptomAnalysis>) {
-    if (!supabaseUrl || !supabaseAnonKey) {
+    if (!isServiceConfigured('supabase')) {
       console.log('Mock: Symptom analysis saved', analysisData);
       return { id: 'mock-id', ...analysisData };
     }
@@ -327,7 +325,7 @@ export const dataService = {
 
   // Save chat session
   async saveChatSession(sessionData: Partial<ChatSession>) {
-    if (!supabaseUrl || !supabaseAnonKey) {
+    if (!isServiceConfigured('supabase')) {
       console.log('Mock: Chat session saved', sessionData);
       return { id: 'mock-id', ...sessionData };
     }
@@ -349,7 +347,7 @@ export const dataService = {
 
   // Update chat session
   async updateChatSession(sessionId: string, updates: Partial<ChatSession>) {
-    if (!supabaseUrl || !supabaseAnonKey) {
+    if (!isServiceConfigured('supabase')) {
       console.log('Mock: Chat session updated', { sessionId, updates });
       return { id: sessionId, ...updates };
     }
@@ -372,7 +370,7 @@ export const dataService = {
 
   // Create appointment
   async createAppointment(appointmentData: Partial<Appointment>) {
-    if (!supabaseUrl || !supabaseAnonKey) {
+    if (!isServiceConfigured('supabase')) {
       console.log('Mock: Appointment created', appointmentData);
       return { id: 'mock-id', ...appointmentData };
     }
@@ -394,7 +392,7 @@ export const dataService = {
 
   // Get patient profile
   async getPatientProfile(userId: string) {
-    if (!supabaseUrl || !supabaseAnonKey) {
+    if (!isServiceConfigured('supabase')) {
       throw new Error('Supabase not configured');
     }
 
@@ -410,7 +408,7 @@ export const dataService = {
 
   // Get doctor profile
   async getDoctorProfile(userId: string) {
-    if (!supabaseUrl || !supabaseAnonKey) {
+    if (!isServiceConfigured('supabase')) {
       throw new Error('Supabase not configured');
     }
 
@@ -426,7 +424,7 @@ export const dataService = {
 
   // Get all verified doctors
   async getVerifiedDoctors() {
-    if (!supabaseUrl || !supabaseAnonKey) {
+    if (!isServiceConfigured('supabase')) {
       return [];
     }
 
@@ -447,7 +445,7 @@ export const dataService = {
 
   // Create emergency alert
   async createEmergencyAlert(alertData: Partial<EmergencyAlert>) {
-    if (!supabaseUrl || !supabaseAnonKey) {
+    if (!isServiceConfigured('supabase')) {
       console.log('Mock: Emergency alert created', alertData);
       return { id: 'mock-id', ...alertData };
     }
@@ -472,7 +470,7 @@ export const dataService = {
 export const aiService = {
   // Analyze symptoms with AI
   async analyzeSymptoms(symptoms: string[], patientId: string, language: string = 'en', voiceInput?: string, imageAnalysis?: any) {
-    if (!supabaseUrl || !supabaseAnonKey) {
+    if (!isServiceConfigured('supabase')) {
       // Return mock analysis
       return {
         success: true,
@@ -486,10 +484,10 @@ export const aiService = {
     }
 
     try {
-      const response = await fetch(`${supabaseUrl}/functions/v1/ai-symptom-analysis`, {
+      const response = await fetch(`${config.supabase.url}/functions/v1/ai-symptom-analysis`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Authorization': `Bearer ${config.supabase.anonKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -513,7 +511,7 @@ export const aiService = {
 
   // Analyze sentiment
   async analyzeSentiment(text: string, appointmentId?: string, patientId?: string, doctorId?: string) {
-    if (!supabaseUrl || !supabaseAnonKey) {
+    if (!isServiceConfigured('supabase')) {
       return {
         success: true,
         sentiment: 'positive',
@@ -522,10 +520,10 @@ export const aiService = {
     }
 
     try {
-      const response = await fetch(`${supabaseUrl}/functions/v1/sentiment-analysis`, {
+      const response = await fetch(`${config.supabase.url}/functions/v1/sentiment-analysis`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Authorization': `Bearer ${config.supabase.anonKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -556,7 +554,7 @@ export const aiService = {
     location?: any;
     emergencyLevel: number;
   }) {
-    if (!supabaseUrl || !supabaseAnonKey) {
+    if (!isServiceConfigured('supabase')) {
       return {
         success: true,
         alertId: 'mock-alert-id',
@@ -568,10 +566,10 @@ export const aiService = {
     }
 
     try {
-      const response = await fetch(`${supabaseUrl}/functions/v1/emergency-escalation`, {
+      const response = await fetch(`${config.supabase.url}/functions/v1/emergency-escalation`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Authorization': `Bearer ${config.supabase.anonKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(emergencyData)

@@ -1,5 +1,5 @@
 // OpenAI API integration utility
-// To use real ChatGPT, you'll need to add your OpenAI API key
+import { config, isServiceConfigured } from '../lib/config';
 
 interface OpenAIMessage {
   role: 'system' | 'user' | 'assistant';
@@ -46,44 +46,45 @@ MedAssist won 3rd place at Avinya2k24 Hackathon for innovative healthcare soluti
 
 export const getChatGPTResponse = async (
   userMessage: string,
-  apiKey?: string
+  useRealAPI: boolean = false
 ): Promise<string> => {
-  // If no API key is provided, use the simulated responses
-  if (!apiKey) {
-    return getSimulatedResponse(userMessage);
-  }
+  // Check if OpenAI is configured and user wants to use real API
+  if (useRealAPI && config.ai.openaiApiKey && isServiceConfigured('ai')) {
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${config.ai.openaiApiKey}`,
+        },
+        body: JSON.stringify({
+          model: 'gpt-3.5-turbo',
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'user', content: userMessage }
+          ],
+          max_tokens: 500,
+          temperature: 0.7,
+        }),
+      });
 
-  try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: userMessage }
-        ],
-        max_tokens: 500,
-        temperature: 0.7,
-      }),
-    });
+      if (!response.ok) {
+        throw new Error('OpenAI API request failed');
+      }
 
-    if (!response.ok) {
-      throw new Error('OpenAI API request failed');
+      const data: OpenAIResponse = await response.json();
+      return data.choices[0]?.message?.content || 'I apologize, but I couldn\'t generate a response. Please try again.';
+    } catch (error) {
+      console.error('OpenAI API Error:', error);
+      console.log('Falling back to simulated responses...');
     }
-
-    const data: OpenAIResponse = await response.json();
-    return data.choices[0]?.message?.content || 'I apologize, but I couldn\'t generate a response. Please try again.';
-  } catch (error) {
-    console.error('OpenAI API Error:', error);
-    return getSimulatedResponse(userMessage);
   }
+
+  // Fallback to simulated responses
+  return getSimulatedResponse(userMessage);
 };
 
-// Fallback simulated responses for demo purposes
+// Enhanced simulated responses for demo purposes
 const getSimulatedResponse = (userMessage: string): string => {
   const lowerMessage = userMessage.toLowerCase();
   
@@ -96,7 +97,11 @@ const getSimulatedResponse = (userMessage: string): string => {
     
     'emergency': "🚨 **Medical Emergency Protocol**:\n\n• Call 911 immediately for life-threatening situations\n• Use our emergency line: (555) 123-4567\n• Visit the nearest emergency room\n\n**Don't wait** - seek immediate medical attention for:\n• Chest pain\n• Difficulty breathing\n• Severe injuries\n• Loss of consciousness",
     
-    'contact': "Contact MedAssist Support:\n\n📞 **Phone**: +1 (555) 123-4567 (24/7)\n📧 **Email**: support@medassist.com\n🏥 **Office**: 123 Healthcare Ave, Medical City\n💬 **Live Chat**: Right here with me!\n🎥 **Video Consultation**: Available through our platform"
+    'contact': "Contact MedAssist Support:\n\n📞 **Phone**: +1 (555) 123-4567 (24/7)\n📧 **Email**: support@medassist.com\n🏥 **Office**: 123 Healthcare Ave, Medical City\n💬 **Live Chat**: Right here with me!\n🎥 **Video Consultation**: Available through our platform",
+
+    'video': "Video Consultation Features:\n\n🎥 **HD Video Calls**: Crystal clear quality\n🔒 **HIPAA Compliant**: Secure and private\n⏰ **24/7 Availability**: Round-the-clock access\n📱 **Multi-Device**: Works on phone, tablet, computer\n\nTo start a video consultation:\n1. Book an appointment\n2. Join the video room at your scheduled time\n3. Connect with your doctor instantly",
+
+    'ai': "AI-Powered Healthcare Features:\n\n🧠 **Symptom Analysis**: Advanced AI diagnosis\n🗣️ **Voice Input**: Speak your symptoms naturally\n📸 **Image Diagnosis**: Upload photos for analysis\n🌍 **12+ Languages**: Multilingual support\n🚨 **Emergency Detection**: Automatic escalation\n\nOur AI helps with preliminary assessment but always consult a doctor for final diagnosis!"
   };
 
   // Find matching response
@@ -113,4 +118,23 @@ const getSimulatedResponse = (userMessage: string): string => {
   }
 
   return "Hello! I'm MedAssist AI, your healthcare companion. 🤖\n\n**I can help you with**:\n• Navigating our website features\n• Booking appointments with doctors\n• Understanding the symptom checker\n• Finding specialists (young doctors & retired experts)\n• General healthcare guidance\n• Contact information and support\n\n**MedAssist Services**:\n🏆 Award-winning platform (3rd place at Avinya2k24)\n👨‍⚕️ Expert doctors and retired specialists\n🤖 AI-powered symptom analysis\n📅 Easy appointment booking\n🔒 Secure and private consultations\n\nHow can I assist you today?";
+};
+
+/**
+ * Check if OpenAI API is properly configured
+ */
+export const isOpenAIConfigured = (): boolean => {
+  return !!(config.ai.openaiApiKey && config.ai.openaiApiKey.startsWith('sk-'));
+};
+
+/**
+ * Get available AI services status
+ */
+export const getAIServicesStatus = () => {
+  return {
+    openai: isOpenAIConfigured(),
+    googleCloud: !!config.ai.googleCloudApiKey,
+    vision: !!config.ai.visionApiKey,
+    fallbackMode: !isOpenAIConfigured()
+  };
 };
